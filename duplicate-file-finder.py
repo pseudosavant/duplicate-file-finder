@@ -1,3 +1,27 @@
+"""
+MIT License
+
+Copyright (c) 2024 Paul Ellis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import os
 import sys
 import hashlib
@@ -59,13 +83,25 @@ def format_date(timestamp):
     return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 def parse_size(size_str):
+    if not size_str:
+        return 0  # Default to 0 bytes if no size is specified
+    
+    size_str = size_str.strip().upper()
+    if size_str == '0' or size_str == '0B':
+        return 0
+    
     units = {'B': 1, 'KB': 1024, 'MB': 1024**2, 'GB': 1024**3, 'TB': 1024**4}
-    size = size_str.upper()
-    if not any(unit in size for unit in units):
-        size += 'B'
-    number = float(size[:-2])
-    unit = size[-2:]
-    return int(number * units[unit])
+    
+    # Check if the size string ends with a valid unit
+    unit = next((u for u in units if size_str.endswith(u)), 'B')
+    
+    try:
+        # Remove the unit from the string and convert to float
+        number = float(size_str[:-len(unit)] if unit != 'B' else size_str)
+        return int(number * units[unit])
+    except ValueError:
+        print(f"Invalid size format: {size_str}. Using default of 0 bytes.")
+        return 0
 
 def find_duplicates(folder_path, file_pattern, current_folder_only, check_contents, verbose, exclude_keywords, min_filesize):
     from concurrent.futures import ThreadPoolExecutor, as_completed
